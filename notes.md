@@ -10,17 +10,17 @@ As part of `Deliverable ⓵ Development deployment: JWT Pizza`, start up the app
 | Register new user<br/>(t@jwt.com, pw: test)         |   register.tsx   |      `[POST] api/auth`             |              |
 | Login new user<br/>(t@jwt.com, pw: test)            |    login.tsx                |     `[PUT] /api/auth`               |              |
 | Order pizza                                         |   menu.tsx & payment.tsx                 |                   |              |
-| Verify pizza                                        |                    |                   |              |
-| View profile page                                   |                    |                   |              |
-| View franchise<br/>(as diner)                       |                    |                   |              |
+| Verify pizza                                        |   delivery.tsx     |                   |              |
+| View profile page                                   |   dinerDashboard.tsx |                   |              |
+| View franchise<br/>(as diner)                       |   franchiseDashboard.tsx |                   |              |
 | Logout                                              |     logout.tsx               |                   |              |
 | View About page                                     |      about.tsx              |                   |              |
 | View History page                                   |   history.tsx                 |                   |              |
-| Login as franchisee<br/>(f@jwt.com, pw: franchisee) |                    |                   |              |
-| View franchise<br/>(as franchisee)                  |                    |                   |              |
-| Create a store                                      |                    |                   |              |
-| Close a store                                       |                    |                   |              |
-| Login as admin<br/>(a@jwt.com, pw: admin)           |                    |                   |              |
-| View Admin page                                     |                    |                   |              |
-| Create a franchise for t@jwt.com                    |                    |                   |              |
-| Close the franchise for t@jwt.com                   |                    |                   |              |
+| Login as franchisee<br/>(f@jwt.com, pw: franchisee) |   login.tsx         |                   |              |
+| View franchise<br/>(as franchisee)                  |   franchiseDashboard.tsx |                   |              |
+| Create a store                                      |   franchiseDashboard.tsx & createStore.tsx |                   |              |
+| Close a store                                       |   franchiseDashboard.tsx & closeStore.tsx |                   |              |
+| Login as admin<br/>(a@jwt.com, pw: admin)           |   login.tsx         |                   |              |
+| View Admin page                                     |   adminDashboard.tsx |                   |              |
+| Create a franchise for t@jwt.com                    |   adminDashboard.tsx & createFranchise.tsx |                   |              |
+| Close the franchise for t@jwt.com                   |   adminDashboard.tsx & closeFranchise.tsx |                   |              |
