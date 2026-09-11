@@ -7,9 +7,9 @@ As part of `Deliverable ⓵ Development deployment: JWT Pizza`, start up the app
 | User activity                                       | Frontend component | Backend endpoints | Database SQL |
 | --------------------------------------------------- | ------------------ | ----------------- | ------------ |
 | View home page                                      |   home.tsx         |     None          |    None          |
-| Register new user<br/>(t@jwt.com, pw: test)         |   register.tsx   |                   |              |
-| Login new user<br/>(t@jwt.com, pw: test)            |                    |                   |              |
-| Order pizza                                         |                    |                   |              |
+| Register new user<br/>(t@jwt.com, pw: test)         |   register.tsx   |      `[POST] api/auth`             |              |
+| Login new user<br/>(t@jwt.com, pw: test)            |    login.tsx                |     `[PUT] /api/auth`               |              |
+| Order pizza                                         |   menu.tsx & payment.tsx                 |                   |              |
 | Verify pizza                                        |                    |                   |              |
 | View profile page                                   |                    |                   |              |
 | View franchise<br/>(as diner)                       |                    |                   |              |
