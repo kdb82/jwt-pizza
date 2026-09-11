@@ -7,20 +7,20 @@ As part of `Deliverable ⓵ Development deployment: JWT Pizza`, start up the app
 | User activity                                       | Frontend component | Backend endpoints | Database SQL |
 | --------------------------------------------------- | ------------------ | ----------------- | ------------ |
 | View home page                                      |   home.tsx         |     None          |    None          |
-| Register new user<br/>(t@jwt.com, pw: test)         |   register.tsx   |      `[POST] api/auth`             |              |
+| Register new user<br/>(t@jwt.com, pw: test)         |   register.tsx   |      `[POST] /api/auth`             |              |
 | Login new user<br/>(t@jwt.com, pw: test)            |    login.tsx                |     `[PUT] /api/auth`               |              |
-| Order pizza                                         |   menu.tsx & payment.tsx                 |                   |              |
-| Verify pizza                                        |   delivery.tsx     |                   |              |
-| View profile page                                   |   dinerDashboard.tsx |                   |              |
-| View franchise<br/>(as diner)                       |   franchiseDashboard.tsx |                   |              |
-| Logout                                              |     logout.tsx               |                   |              |
+| Order pizza                                         |   menu.tsx & payment.tsx                 | `[GET] /api/order/menu`, `[GET] /api/franchise`, `[POST] /api/order` |              |
+| Verify pizza                                        |   delivery.tsx     | `[POST] /api/order/verify` via `VITE_PIZZA_FACTORY_URL` |              |
+| View profile page                                   |   dinerDashboard.tsx | `[GET] /api/user/me`, `[GET] /api/order` |              |
+| View franchise<br/>(as diner)                       |   franchiseDashboard.tsx | `[GET] /api/franchise/{user.id}` |              |
+| Logout                                              |     logout.tsx               | `[DELETE] /api/auth` |              |
 | View About page                                     |      about.tsx              |                   |              |
 | View History page                                   |   history.tsx                 |                   |              |
-| Login as franchisee<br/>(f@jwt.com, pw: franchisee) |   login.tsx         |                   |              |
-| View franchise<br/>(as franchisee)                  |   franchiseDashboard.tsx |                   |              |
-| Create a store                                      |   franchiseDashboard.tsx & createStore.tsx |                   |              |
-| Close a store                                       |   franchiseDashboard.tsx & closeStore.tsx |                   |              |
-| Login as admin<br/>(a@jwt.com, pw: admin)           |   login.tsx         |                   |              |
-| View Admin page                                     |   adminDashboard.tsx |                   |              |
-| Create a franchise for t@jwt.com                    |   adminDashboard.tsx & createFranchise.tsx |                   |              |
-| Close the franchise for t@jwt.com                   |   adminDashboard.tsx & closeFranchise.tsx |                   |              |
+| Login as franchisee<br/>(f@jwt.com, pw: franchisee) |   login.tsx         | `[PUT] /api/auth` |              |
+| View franchise<br/>(as franchisee)                  |   franchiseDashboard.tsx | `[GET] /api/franchise/{user.id}` |              |
+| Create a store                                      |   franchiseDashboard.tsx & createStore.tsx | `[POST] /api/franchise/{franchise.id}/store` |              |
+| Close a store                                       |   franchiseDashboard.tsx & closeStore.tsx | `[DELETE] /api/franchise/{franchise.id}/store/{store.id}` |              |
+| Login as admin<br/>(a@jwt.com, pw: admin)           |   login.tsx         | `[PUT] /api/auth` |              |
+| View Admin page                                     |   adminDashboard.tsx | `[GET] /api/franchise?page={page}&limit={limit}&name={nameFilter}` |              |
+| Create a franchise for t@jwt.com                    |   adminDashboard.tsx & createFranchise.tsx | `[POST] /api/franchise` |              |
+| Close the franchise for t@jwt.com                   |   adminDashboard.tsx & closeFranchise.tsx | `[DELETE] /api/franchise/{franchise.id}` |              |
