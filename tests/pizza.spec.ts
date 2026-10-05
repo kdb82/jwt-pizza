@@ -38,6 +38,11 @@ async function mockFranchises(page: Page) {
 
 async function mockLogin(page: Page) {
   await page.route('*/**/api/auth', async (route) => {
+    if (route.request().method() === 'DELETE') {
+      await route.fulfill({ json: {} });
+      return;
+    }
+
     expect(route.request().method()).toBe('PUT');
     expect(route.request().postDataJSON()).toEqual({
       email: 'kdb82@byu.edu',
@@ -154,6 +159,18 @@ test('register', async ({ page }) => {
   await page.getByRole('button', { name: 'Register' }).click();
 
   await expect(page.getByRole('link', { name: 'JL' })).toBeVisible();
+});
+
+test('logout', async ({ page }) => {
+  await mockLogin(page);
+  await page.goto('/');
+  await page.getByRole('link', { name: 'Login' }).click();
+  await page.getByRole('textbox', { name: 'Email address' }).fill('kdb82@byu.edu');
+  await page.getByRole('textbox', { name: 'Password' }).fill('kdb82');
+  await page.getByRole('button', { name: 'Login' }).click();
+  await page.getByRole('link', { name: 'Logout' }).click();
+
+  await expect(page.getByRole('link', { name: 'Login' })).toBeVisible();
 });
 
 test('public page navigation', async ({ page }) => {
