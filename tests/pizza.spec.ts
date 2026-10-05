@@ -128,6 +128,49 @@ async function mockOrderHistory(page: Page) {
   });
 }
 
+async function mockCreateFranchise(page: Page) {
+  await page.route('*/**/api/franchise', async (route) => {
+    expect(route.request().method()).toBe('POST');
+    expect(route.request().postDataJSON()).toEqual({
+      stores: [],
+      id: '',
+      name: 'Jordan Pizza',
+      admins: [{ email: 'admin@example.com' }],
+    });
+    await route.fulfill({
+      json: {
+        id: '5',
+        name: 'Jordan Pizza',
+        stores: [],
+        admins: [{ email: 'admin@example.com' }],
+      },
+    });
+  });
+}
+
+async function mockUserFranchise(page: Page) {
+  await page.route('*/**/api/franchise/3', async (route) => {
+    expect(route.request().method()).toBe('GET');
+    await route.fulfill({
+      json: [
+        {
+          id: '1',
+          name: 'Jordan Pizza',
+          stores: [{ id: '1', name: 'Provo', totalRevenue: 1.2 }],
+        },
+      ],
+    });
+  });
+}
+
+async function mockCreateStore(page: Page) {
+  await page.route('*/**/api/franchise/1/store', async (route) => {
+    expect(route.request().method()).toBe('POST');
+    expect(route.request().postDataJSON()).toEqual({ id: '', name: 'Springville' });
+    await route.fulfill({ json: { id: '2', name: 'Springville' } });
+  });
+}
+
 async function mockDocs(page: Page) {
   await page.route('*/**/api/docs', async (route) => {
     expect(route.request().method()).toBe('GET');
@@ -204,6 +247,42 @@ test('diner dashboard', async ({ page }) => {
   await expect(page.getByRole('main')).toContainText('Kai Chen');
   await expect(page.locator('tbody')).toContainText('23');
   await expect(page.locator('tbody')).toContainText('0.004 ₿');
+});
+
+test('franchise landing page', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('link', { name: 'Franchise' }).first().click();
+
+  await expect(page.getByRole('heading', { name: 'So you want a piece of the pie?' })).toBeVisible();
+  await expect(page.getByRole('link', { name: '800-555-5555' })).toHaveAttribute('href', 'tel:800-555-5555');
+});
+
+test('create franchise', async ({ page }) => {
+  await mockCreateFranchise(page);
+  await page.goto('/create-franchise');
+  await page.getByPlaceholder('franchise name').fill('Jordan Pizza');
+  await page.getByPlaceholder('franchisee admin email').fill('admin@example.com');
+  await page.getByRole('button', { name: 'Create' }).click();
+
+  await expect(page.getByRole('button', { name: 'Order now' })).toBeVisible();
+});
+
+test('create store', async ({ page }) => {
+  await mockLogin(page);
+  await mockUserFranchise(page);
+  await mockCreateStore(page);
+  await page.goto('/');
+  await page.getByRole('link', { name: 'Login' }).click();
+  await page.getByRole('textbox', { name: 'Email address' }).fill('kdb82@byu.edu');
+  await page.getByRole('textbox', { name: 'Password' }).fill('kdb82');
+  await page.getByRole('button', { name: 'Login' }).click();
+  await page.getByRole('link', { name: 'Franchise' }).first().click();
+  await expect(page.getByRole('heading', { name: 'Jordan Pizza' })).toBeVisible();
+  await page.getByRole('button', { name: 'Create store' }).click();
+  await page.getByPlaceholder('store name').fill('Springville');
+  await page.getByRole('button', { name: 'Create' }).click();
+
+  await expect(page.getByRole('heading', { name: 'Jordan Pizza' })).toBeVisible();
 });
 
 test('public page navigation', async ({ page }) => {
