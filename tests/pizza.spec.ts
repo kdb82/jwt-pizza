@@ -178,6 +178,50 @@ async function mockCloseStore(page: Page) {
   });
 }
 
+async function mockAdminLogin(page: Page) {
+  await page.route('*/**/api/auth', async (route) => {
+    expect(route.request().method()).toBe('PUT');
+    expect(route.request().postDataJSON()).toEqual({ email: 'admin@example.com', password: 'admin123' });
+    await route.fulfill({
+      json: {
+        user: {
+          id: '9',
+          name: 'Admin User',
+          email: 'admin@example.com',
+          roles: [{ role: 'admin' }],
+        },
+        token: 'admin-token',
+      },
+    });
+  });
+}
+
+async function mockAdminFranchises(page: Page) {
+  await page.route('*/**/api/franchise?page=0&limit=3&name=*', async (route) => {
+    expect(route.request().method()).toBe('GET');
+    await route.fulfill({
+      json: {
+        franchises: [
+          {
+            id: '1',
+            name: 'Jordan Pizza',
+            admins: [{ name: 'Admin User', email: 'admin@example.com' }],
+            stores: [{ id: '1', name: 'Provo', totalRevenue: 1.2 }],
+          },
+        ],
+        more: false,
+      },
+    });
+  });
+}
+
+async function mockCloseFranchise(page: Page) {
+  await page.route('*/**/api/franchise/1', async (route) => {
+    expect(route.request().method()).toBe('DELETE');
+    await route.fulfill({ json: null });
+  });
+}
+
 async function mockDocs(page: Page) {
   await page.route('*/**/api/docs', async (route) => {
     expect(route.request().method()).toBe('GET');
@@ -307,6 +351,41 @@ test('close store', async ({ page }) => {
   await page.getByRole('button', { name: 'Close' }).click();
 
   await expect(page.getByRole('heading', { name: 'Jordan Pizza' })).toBeVisible();
+});
+
+test('admin dashboard', async ({ page }) => {
+  await mockAdminLogin(page);
+  await mockAdminFranchises(page);
+  await page.goto('/');
+  await page.getByRole('link', { name: 'Login' }).click();
+  await page.getByRole('textbox', { name: 'Email address' }).fill('admin@example.com');
+  await page.getByRole('textbox', { name: 'Password' }).fill('admin123');
+  await page.getByRole('button', { name: 'Login' }).click();
+  await page.getByRole('link', { name: 'Admin' }).click();
+
+  await expect(page.getByRole('heading', { name: "Mama Ricci's kitchen" })).toBeVisible();
+  await expect(page.locator('tbody')).toContainText('Jordan Pizza');
+  await expect(page.locator('tbody')).toContainText('Provo');
+  await expect(page.locator('tbody')).toContainText('1.2 ₿');
+});
+
+test('close franchise', async ({ page }) => {
+  await mockAdminLogin(page);
+  await mockAdminFranchises(page);
+  await mockCloseFranchise(page);
+  await page.goto('/');
+  await page.getByRole('link', { name: 'Login' }).click();
+  await page.getByRole('textbox', { name: 'Email address' }).fill('admin@example.com');
+  await page.getByRole('textbox', { name: 'Password' }).fill('admin123');
+  await page.getByRole('button', { name: 'Login' }).click();
+  await page.getByRole('link', { name: 'Admin' }).click();
+  await page.getByRole('button', { name: 'Close' }).first().click();
+
+  await expect(page.getByRole('heading', { name: 'Sorry to see you go' })).toBeVisible();
+  await expect(page.getByRole('main')).toContainText('Jordan Pizza');
+  await page.getByRole('button', { name: 'Close' }).click();
+
+  await expect(page.getByRole('heading', { name: "Mama Ricci's kitchen" })).toBeVisible();
 });
 
 test('public page navigation', async ({ page }) => {
