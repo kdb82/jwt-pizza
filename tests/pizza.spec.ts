@@ -111,6 +111,23 @@ async function mockOrder(page: Page) {
   });
 }
 
+async function mockOrderHistory(page: Page) {
+  await page.route('*/**/api/order', async (route) => {
+    expect(route.request().method()).toBe('GET');
+    await route.fulfill({
+      json: {
+        orders: [
+          {
+            id: '23',
+            date: '2026-10-05T12:00:00.000Z',
+            items: [{ menuId: '2', description: 'Pepperoni', price: 0.0042 }],
+          },
+        ],
+      },
+    });
+  });
+}
+
 async function mockDocs(page: Page) {
   await page.route('*/**/api/docs', async (route) => {
     expect(route.request().method()).toBe('GET');
@@ -171,6 +188,22 @@ test('logout', async ({ page }) => {
   await page.getByRole('link', { name: 'Logout' }).click();
 
   await expect(page.getByRole('link', { name: 'Login' })).toBeVisible();
+});
+
+test('diner dashboard', async ({ page }) => {
+  await mockLogin(page);
+  await mockOrderHistory(page);
+  await page.goto('/');
+  await page.getByRole('link', { name: 'Login' }).click();
+  await page.getByRole('textbox', { name: 'Email address' }).fill('kdb82@byu.edu');
+  await page.getByRole('textbox', { name: 'Password' }).fill('kdb82');
+  await page.getByRole('button', { name: 'Login' }).click();
+  await page.getByRole('link', { name: 'KC' }).click();
+
+  await expect(page.getByRole('heading', { name: 'Your pizza kitchen' })).toBeVisible();
+  await expect(page.getByRole('main')).toContainText('Kai Chen');
+  await expect(page.locator('tbody')).toContainText('23');
+  await expect(page.locator('tbody')).toContainText('0.004 ₿');
 });
 
 test('public page navigation', async ({ page }) => {
