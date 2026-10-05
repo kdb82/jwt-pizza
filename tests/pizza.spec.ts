@@ -57,6 +57,28 @@ async function mockLogin(page: Page) {
   });
 }
 
+async function mockRegister(page: Page) {
+  await page.route('*/**/api/auth', async (route) => {
+    expect(route.request().method()).toBe('POST');
+    expect(route.request().postDataJSON()).toEqual({
+      name: 'Jordan Lee',
+      email: 'jordan@example.com',
+      password: 'password123',
+    });
+    await route.fulfill({
+      json: {
+        user: {
+          id: '4',
+          name: 'Jordan Lee',
+          email: 'jordan@example.com',
+          roles: [{ role: 'diner' }],
+        },
+        token: 'register-token',
+      },
+    });
+  });
+}
+
 async function mockCurrentUser(page: Page) {
   await page.route('*/**/api/user/me', async (route) => {
     expect(route.request().method()).toBe('GET');
@@ -84,10 +106,79 @@ async function mockOrder(page: Page) {
   });
 }
 
+async function mockDocs(page: Page) {
+  await page.route('*/**/api/docs', async (route) => {
+    expect(route.request().method()).toBe('GET');
+    await route.fulfill({
+      json: {
+        endpoints: [
+          {
+            requiresAuth: false,
+            method: 'GET',
+            path: '/api/order/menu',
+            description: 'Get the pizza menu',
+            example: '{}',
+            response: [],
+          },
+        ],
+      },
+    });
+  });
+}
+
 test('home page', async ({ page }) => {
   await page.goto('/');
 
   expect(await page.title()).toBe('JWT Pizza');
+});
+
+test('login', async ({ page }) => {
+  await mockLogin(page);
+  await page.goto('http://localhost:5173/');
+  await page.getByRole('link', { name: 'Login' }).click();
+  await page.getByRole('textbox', { name: 'Email address' }).fill('kdb82@byu.edu');
+  await page.getByRole('textbox', { name: 'Email address' }).press('Tab');
+  await page.getByRole('textbox', { name: 'Password' }).fill('kdb82');
+  await page.getByRole('button', { name: 'Login' }).click();
+
+  await expect(page.getByRole('link', { name: 'KC' })).toBeVisible();
+});
+
+test('register', async ({ page }) => {
+  await mockRegister(page);
+  await page.goto('/');
+  await page.getByRole('link', { name: 'Register' }).click();
+  await page.getByPlaceholder('Full name').fill('Jordan Lee');
+  await page.getByPlaceholder('Email address').fill('jordan@example.com');
+  await page.getByLabel('Password').fill('password123');
+  await page.getByRole('button', { name: 'Register' }).click();
+
+  await expect(page.getByRole('link', { name: 'JL' })).toBeVisible();
+});
+
+test('public page navigation', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('link', { name: 'About' }).click();
+  await expect(page.getByRole('heading', { name: 'The secret sauce' })).toBeVisible();
+
+  await page.getByRole('link', { name: 'History' }).click();
+  await expect(page.getByRole('heading', { name: 'Mama Rucci, my my' })).toBeVisible();
+});
+
+test('unknown page', async ({ page }) => {
+  await page.goto('/does-not-exist');
+
+  await expect(page.getByRole('heading', { name: 'Oops' })).toBeVisible();
+  await expect(page.getByRole('main')).toContainText('Please try another page.');
+});
+
+test('API documentation', async ({ page }) => {
+  await mockDocs(page);
+  await page.goto('/docs');
+
+  await expect(page.getByRole('heading', { name: 'JWT Pizza API' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '[GET] /api/order/menu' })).toBeVisible();
+  await expect(page.getByText('Get the pizza menu')).toBeVisible();
 });
 
 test('purchase with login', async ({ page }) => {
