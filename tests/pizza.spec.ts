@@ -171,6 +171,13 @@ async function mockCreateStore(page: Page) {
   });
 }
 
+async function mockCloseStore(page: Page) {
+  await page.route('*/**/api/franchise/1/store/1', async (route) => {
+    expect(route.request().method()).toBe('DELETE');
+    await route.fulfill({ json: null });
+  });
+}
+
 async function mockDocs(page: Page) {
   await page.route('*/**/api/docs', async (route) => {
     expect(route.request().method()).toBe('GET');
@@ -281,6 +288,23 @@ test('create store', async ({ page }) => {
   await page.getByRole('button', { name: 'Create store' }).click();
   await page.getByPlaceholder('store name').fill('Springville');
   await page.getByRole('button', { name: 'Create' }).click();
+
+  await expect(page.getByRole('heading', { name: 'Jordan Pizza' })).toBeVisible();
+});
+
+test('close store', async ({ page }) => {
+  await mockLogin(page);
+  await mockUserFranchise(page);
+  await mockCloseStore(page);
+  await page.goto('/');
+  await page.getByRole('link', { name: 'Login' }).click();
+  await page.getByRole('textbox', { name: 'Email address' }).fill('kdb82@byu.edu');
+  await page.getByRole('textbox', { name: 'Password' }).fill('kdb82');
+  await page.getByRole('button', { name: 'Login' }).click();
+  await page.getByRole('link', { name: 'Franchise' }).first().click();
+  await page.getByRole('button', { name: 'Close' }).click();
+  await expect(page.getByRole('heading', { name: 'Sorry to see you go' })).toBeVisible();
+  await page.getByRole('button', { name: 'Close' }).click();
 
   await expect(page.getByRole('heading', { name: 'Jordan Pizza' })).toBeVisible();
 });
