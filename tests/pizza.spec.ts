@@ -18,6 +18,72 @@ async function mockMenu(page: Page) {
   });
 }
 
+async function mockFranchises(page: Page) {
+  await page.route('*/**/api/franchise?page=0&limit=20&name=*', async (route) => {
+    expect(route.request().method()).toBe('GET');
+    await route.fulfill({
+      json: {
+        franchises: [
+          {
+            id: 1,
+            name: 'JWT Pizza',
+            stores: [{ id: 1, name: 'Provo' }],
+          },
+        ],
+        more: false,
+      },
+    });
+  });
+}
+
+async function mockLogin(page: Page) {
+  await page.route('*/**/api/auth', async (route) => {
+    expect(route.request().method()).toBe('PUT');
+    expect(route.request().postDataJSON()).toEqual({
+      email: 'kdb82@byu.edu',
+      password: 'kdb82',
+    });
+    await route.fulfill({
+      json: {
+        user: {
+          id: '3',
+          name: 'Kai Chen',
+          email: 'kdb82@byu.edu',
+          roles: [{ role: 'diner' }],
+        },
+        token: 'abcdef',
+      },
+    });
+  });
+}
+
+async function mockCurrentUser(page: Page) {
+  await page.route('*/**/api/user/me', async (route) => {
+    expect(route.request().method()).toBe('GET');
+    await route.fulfill({
+      json: {
+        id: '3',
+        name: 'Kai Chen',
+        email: 'kdb82@byu.edu',
+        roles: [{ role: 'diner' }],
+      },
+    });
+  });
+}
+
+async function mockOrder(page: Page) {
+  await page.route('*/**/api/order', async (route) => {
+    expect(route.request().method()).toBe('POST');
+    const order = route.request().postDataJSON();
+    await route.fulfill({
+      json: {
+        order: { ...order, id: 23 },
+        jwt: 'eyJpYXQ',
+      },
+    });
+  });
+}
+
 test('home page', async ({ page }) => {
   await page.goto('/');
 
@@ -26,6 +92,10 @@ test('home page', async ({ page }) => {
 
 test('purchase with login', async ({ page }) => {
   await mockMenu(page);
+  await mockFranchises(page);
+  await mockLogin(page);
+  await mockCurrentUser(page);
+  await mockOrder(page);
     await page.goto('http://localhost:5173/');
     await page.getByRole('button', { name: 'Order now' }).click();
     await expect(page.locator('h2')).toContainText('Awesome is a click away');
