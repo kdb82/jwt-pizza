@@ -5,3 +5,7 @@ config.js
 coverage
 dist
 **/.vite
+test-results
+playwright-report
+blob-report
+playwright/.cache
