@@ -1,4 +1,22 @@
 import { test, expect } from './testSetup';
+import type { Page } from '@playwright/test';
+
+async function mockMenu(page: Page) {
+  await page.route('*/**/api/order/menu', async (route) => {
+    expect(route.request().method()).toBe('GET');
+    await route.fulfill({
+      json: [
+        {
+          id: 2,
+          title: 'Pepperoni',
+          image: 'pizza2.png',
+          price: 0.0042,
+          description: 'Spicy treat',
+        },
+      ],
+    });
+  });
+}
 
 test('home page', async ({ page }) => {
   await page.goto('/');
@@ -7,6 +25,7 @@ test('home page', async ({ page }) => {
 });
 
 test('purchase with login', async ({ page }) => {
+  await mockMenu(page);
     await page.goto('http://localhost:5173/');
     await page.getByRole('button', { name: 'Order now' }).click();
     await expect(page.locator('h2')).toContainText('Awesome is a click away');
