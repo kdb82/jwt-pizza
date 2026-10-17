@@ -58,6 +58,7 @@ async function loginAs(page: Page, email: string, password: string) {
   await page.getByRole('textbox', { name: 'Email address' }).fill(email);
   await page.getByRole('textbox', { name: 'Password' }).fill(password);
   await page.getByRole('button', { name: 'Login' }).click();
+  await expect(page.getByRole('link', { name: 'Logout' })).toBeVisible();
   await page.goto('/diner-dashboard');
 }
 
