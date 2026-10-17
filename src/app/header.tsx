@@ -2,6 +2,7 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { HamburgerIcon, CloseIcon } from '../icons';
 import { User } from '../service/pizzaService';
+import { userInitials } from './userInitials';
 
 interface Props {
   user: User | null;
@@ -11,11 +12,6 @@ interface Props {
 export default function Header(props: Props) {
   function validateConstraints(constraints: (() => boolean)[]) {
     return constraints.every((c) => c());
-  }
-
-  function generateUserText(user: User) {
-    const names = user?.name?.split(' ') || ['?'];
-    return names.length > 1 ? names[0].charAt(0) + names[names.length - 1].charAt(0) : names[0].charAt(0);
   }
 
   return (
@@ -55,7 +51,7 @@ export default function Header(props: Props) {
               <div className="hs-tooltip inline-block  [--placement:bottom]">
                 <div className="hs-tooltip-toggle pl-4 font-semibold text-orange-400">
                   <span className="inline-flex items-center justify-center size-[30px] rounded-full bg-orange-800 font-semibold text-white leading-none">
-                    {generateUserText(props.user)}
+                    {userInitials(props.user)}
                   </span>
                 </div>
               </div>

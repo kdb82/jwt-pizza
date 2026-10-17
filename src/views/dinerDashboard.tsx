@@ -6,6 +6,7 @@ import { Order, OrderHistory, Role, User } from '../service/pizzaService';
 import { CloseIcon } from '../icons';
 import { HSOverlay } from 'preline';
 import Button from '../components/button';
+import { userInitials } from '../app/userInitials';
 
 interface Props {
   user: User | null;
@@ -47,16 +48,16 @@ export default function DinerDashboard(props: Props) {
 
     await pizzaService.updateUser(updatedUser);
     props.setUser(updatedUser);
-    setTimeout(() => {
-      HSOverlay.close(document.getElementById('hs-jwt-modal')!);
-    }, 100);
+    HSOverlay.close(document.getElementById('hs-jwt-modal')!);
   }
 
   return (
     <View title="Your pizza kitchen">
       <div className="text-start py-8 px-4 sm:px-6 lg:px-8">
         <div className="hs-tooltip inline-block">
-          <img className="hs-tooltip-toggle relative inline-block size-[96px] rounded-full ring-2 ring-white hover:z-10" src="https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=facearea&facepad=2&w=300&h=300&q=80" alt="Employee stock photo" />
+          <span className="hs-tooltip-toggle relative inline-flex items-center justify-center size-[96px] rounded-full ring-2 ring-white bg-orange-800 text-3xl font-semibold text-white leading-none hover:z-10" aria-label={`${user.name} avatar`}>
+            {userInitials(user)}
+          </span>
         </div>
         <Button title="Edit" className="w-16 p-0" onPress={() => HSOverlay.open(document.getElementById('hs-jwt-modal')!)} />
 
