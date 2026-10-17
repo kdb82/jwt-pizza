@@ -10,6 +10,7 @@ import { TrashIcon } from '../icons';
 interface Props {
   user: User | null;
 }
+const USER_PAGE_LIMIT = 10;
 
 export default function AdminDashboard(props: Props) {
   const navigate = useNavigate();
@@ -31,13 +32,13 @@ export default function AdminDashboard(props: Props) {
 
   React.useEffect(() => {
     (async () => {
-      setUserList(await pizzaService.getUsers(userPage, 10, userFilter));
+      setUserList(await pizzaService.getUsers(userPage, USER_PAGE_LIMIT, userFilter));
     })();
   }, [props.user, userPage, userFilter]);
 
   async function deleteUser(user: User) {
     await pizzaService.deleteUser(user);
-    setUserList(await pizzaService.getUsers(userPage, 10, userFilter));
+    setUserList(await pizzaService.getUsers(userPage, USER_PAGE_LIMIT, userFilter));
   }
 
   function filterUsers() {
