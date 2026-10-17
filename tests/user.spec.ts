@@ -64,6 +64,7 @@ async function loginAs(page: Page, email: string, password: string) {
 
 async function updateUserFields(page: Page, name: string, email: string, password: string, onUpdate: () => Record<string, unknown> | undefined) {
   await page.getByRole('button', { name: 'Edit' }).click();
+  await expect(page.locator('#hs-jwt-modal')).toHaveClass(/\bopen\b/);
   const fields = page.locator('[role="dialog"] input');
   await fields.nth(0).fill(name);
   await fields.nth(1).fill(email);
@@ -133,6 +134,7 @@ test('updateUser', async ({ page }) => {
   await expect(page.getByRole('main')).toContainText('pizza diner');
 
   await page.getByRole('button', { name: 'Edit' }).click();
+  await expect(page.locator('#hs-jwt-modal')).toHaveClass(/\bopen\b/);
   await expect(page.locator('h3')).toContainText('Edit user');
   await page.getByRole('textbox').first().fill('pizza dinerx');
   await page.getByRole('button', { name: 'Update' }).click();

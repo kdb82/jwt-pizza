@@ -15,13 +15,14 @@ export default function AdminDashboard(props: Props) {
   const navigate = useNavigate();
   const [franchiseList, setFranchiseList] = React.useState<FranchiseList>({ franchises: [], more: false });
   const [franchisePage, setFranchisePage] = React.useState(0);
+  const [franchiseFilter, setFranchiseFilter] = React.useState('*');
   const filterFranchiseRef = React.useRef<HTMLInputElement>(null);
 
   React.useEffect(() => {
     (async () => {
-      setFranchiseList(await pizzaService.getFranchises(franchisePage, 3, '*'));
+      setFranchiseList(await pizzaService.getFranchises(franchisePage, 3, franchiseFilter));
     })();
-  }, [props.user, franchisePage]);
+  }, [props.user, franchisePage, franchiseFilter]);
 
   const [userList, setUserList] = React.useState<UserList>({ users: [], more: false });
   const [userPage, setUserPage] = React.useState(1);
@@ -56,8 +57,9 @@ export default function AdminDashboard(props: Props) {
     navigate('/admin-dashboard/close-store', { state: { franchise: franchise, store: store } });
   }
 
-  async function filterFranchises() {
-    setFranchiseList(await pizzaService.getFranchises(franchisePage, 10, `*${filterFranchiseRef.current?.value}*`));
+  function filterFranchises() {
+    setFranchisePage(0);
+    setFranchiseFilter(`*${filterFranchiseRef.current?.value}*`);
   }
 
   let response = <NotFound />;
