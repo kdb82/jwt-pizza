@@ -19,6 +19,7 @@ export default function DinerDashboard(props: Props) {
   const nameRef = React.useRef<HTMLInputElement>(null);
   const emailRef = React.useRef<HTMLInputElement>(null);
   const passwordRef = React.useRef<HTMLInputElement>(null);
+  const [updateError, setUpdateError] = React.useState('');
 
   React.useEffect(() => {
     (async () => {
@@ -37,7 +38,8 @@ export default function DinerDashboard(props: Props) {
     return role.role;
   }
 
-  async function updateUser() {
+  async function updateUser(event: React.FormEvent) {
+    event.preventDefault();
     let updatedUser: User = {
       id: user.id,
       name: nameRef.current?.value,
@@ -46,9 +48,13 @@ export default function DinerDashboard(props: Props) {
       roles: user.roles,
     };
 
-    await pizzaService.updateUser(updatedUser);
-    props.setUser(updatedUser);
-    HSOverlay.close(document.getElementById('hs-jwt-modal')!);
+    try {
+      props.setUser(await pizzaService.updateUser(updatedUser));
+      setUpdateError('');
+      HSOverlay.close(document.getElementById('hs-jwt-modal')!);
+    } catch (error: any) {
+      setUpdateError(error?.message || 'Unable to update user');
+    }
   }
 
   return (
@@ -144,24 +150,30 @@ export default function DinerDashboard(props: Props) {
                 <CloseIcon className="" />
               </button>
             </div>
-            <div className="p-4 overflow-y-scroll max-h-52">
-              <div className="my-4 text-lg text-start grid grid-cols-5 gap-2 items-center">
-                <div className="font-semibold">name:</div>
-                <input type="text" className="col-span-4 border border-gray-300 rounded-md p-1" defaultValue={user.name} ref={nameRef} />
-                <div className="font-semibold">email:</div>
-                <input type="email" className="col-span-4 border border-gray-300 rounded-md p-1" defaultValue={user.email} ref={emailRef} />
-                <div className="font-semibold">password:</div>
-                <input id="password" type="text" className="col-span-4 border border-gray-300 rounded-md p-1" defaultValue="" ref={passwordRef} />
+            <form onSubmit={updateUser}>
+              <div className="p-4 overflow-y-scroll max-h-52">
+                {updateError && (
+                  <div className="text-sm text-red-600" role="alert">
+                    {updateError}
+                  </div>
+                )}
+                <div className="my-4 text-lg text-start grid grid-cols-5 gap-2 items-center">
+                  <div className="font-semibold">name:</div>
+                  <input type="text" required className="col-span-4 border border-gray-300 rounded-md p-1" defaultValue={user.name} ref={nameRef} />
+                  <div className="font-semibold">email:</div>
+                  <input type="email" required className="col-span-4 border border-gray-300 rounded-md p-1" defaultValue={user.email} ref={emailRef} />
+                  <div className="font-semibold">password:</div>
+                  <input id="password" type="text" className="col-span-4 border border-gray-300 rounded-md p-1" defaultValue="" ref={passwordRef} />
+                </div>
               </div>
-            </div>
-            <div className="flex justify-end items-center gap-x-2 py-3 px-4 border-t  bg-slate-200 rounded-b-xl">
-              <button
-                type="button"
-                className="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none"
-                onClick={updateUser}>
-                Update
-              </button>
-            </div>
+              <div className="flex justify-end items-center gap-x-2 py-3 px-4 border-t  bg-slate-200 rounded-b-xl">
+                <button
+                  type="submit"
+                  className="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none">
+                  Update
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       </div>

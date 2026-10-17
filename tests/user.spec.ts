@@ -186,3 +186,34 @@ for (const role of ['franchisee', 'admin'] as const) {
     });
   });
 }
+test('shows an error and keeps the modal open when the update fails', async ({ page }) => {
+  await mockUserApi(page, 'diner');
+  await page.route('*/**/api/user/diner-1', async (route) => {
+    await route.fulfill({ status: 403, json: { message: 'unauthorized' } });
+  });
+  await loginAs(page, 'diner@example.com', 'old-password');
+
+  await page.getByRole('button', { name: 'Edit' }).click();
+  await expect(page.locator('#hs-jwt-modal')).toHaveClass(/\bopen\b/);
+  await page.locator('[role="dialog"] input').nth(0).fill('rejected name');
+  await page.getByRole('button', { name: 'Update' }).click();
+
+  await expect(page.locator('#hs-jwt-modal').getByRole('alert')).toHaveText('unauthorized');
+  await expect(page.locator('#hs-jwt-modal')).toHaveClass(/\bopen\b/);
+  await expect(page.getByRole('main')).not.toContainText('rejected name');
+});
+
+test('does not submit the update when the name is empty', async ({ page }) => {
+  const api = await mockUserApi(page, 'diner');
+  await loginAs(page, 'diner@example.com', 'old-password');
+
+  await page.getByRole('button', { name: 'Edit' }).click();
+  await expect(page.locator('#hs-jwt-modal')).toHaveClass(/\bopen\b/);
+  const nameField = page.locator('[role="dialog"] input').nth(0);
+  await nameField.fill('');
+  await page.getByRole('button', { name: 'Update' }).click();
+
+  expect(await nameField.evaluate((input: HTMLInputElement) => input.validity.valueMissing)).toBe(true);
+  expect(api.getUpdateRequest()).toBeUndefined();
+  await expect(page.locator('#hs-jwt-modal')).toHaveClass(/\bopen\b/);
+});
