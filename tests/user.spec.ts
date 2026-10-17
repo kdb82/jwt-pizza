@@ -58,6 +58,7 @@ async function loginAs(page: Page, email: string, password: string) {
   await page.getByRole('textbox', { name: 'Email address' }).fill(email);
   await page.getByRole('textbox', { name: 'Password' }).fill(password);
   await page.getByRole('button', { name: 'Login' }).click();
+  await expect(page.getByRole('link', { name: 'Logout' })).toBeVisible();
   await page.goto('/diner-dashboard');
 }
 
@@ -71,7 +72,54 @@ async function updateUserFields(page: Page, name: string, email: string, passwor
   await expect.poll(onUpdate).toBeTruthy();
 }
 
+async function mockRegisterApi(page: Page) {
+  const accounts = new Map<string, { user: Record<string, unknown>; password: string }>();
+  let currentUser: Record<string, unknown> | null = null;
+
+  await page.route('*/**/api/auth', async (route) => {
+    const request = route.request();
+    const body = request.postDataJSON();
+    if (request.method() === 'POST') {
+      const user = { id: '7', name: body.name, email: body.email, roles: [{ role: 'diner' }] };
+      accounts.set(body.email, { user, password: body.password });
+      currentUser = user;
+      await route.fulfill({ json: { user, token: 'register-token' } });
+    } else if (request.method() === 'PUT') {
+      const account = accounts.get(body.email);
+      if (!account || account.password !== body.password) {
+        await route.fulfill({ status: 404, json: { message: 'unknown user' } });
+        return;
+      }
+      currentUser = account.user;
+      await route.fulfill({ json: { user: account.user, token: 'login-token' } });
+    } else {
+      currentUser = null;
+      await route.fulfill({ json: { message: 'logout successful' } });
+    }
+  });
+
+  await page.route('*/**/api/user/me', async (route) => {
+    await route.fulfill({ json: currentUser });
+  });
+
+  await page.route(/\/api\/user\/\d+$/, async (route) => {
+    expect(route.request().method()).toBe('PUT');
+    const body = route.request().postDataJSON();
+    const account = accounts.get(currentUser?.email as string)!;
+    const user = { ...account.user, name: body.name, email: body.email };
+    accounts.delete(account.user.email as string);
+    accounts.set(user.email, { user, password: body.password || account.password });
+    currentUser = user;
+    await route.fulfill({ json: { user, token: 'updated-token' } });
+  });
+
+  await page.route('*/**/api/order', async (route) => {
+    await route.fulfill({ json: { orders: [] } });
+  });
+}
+
 test('updateUser', async ({ page }) => {
+  await mockRegisterApi(page);
   const email = `user${Math.floor(Math.random() * 10000)}@jwt.com`;
   await page.goto('/');
   await page.getByRole('link', { name: 'Register' }).click();
