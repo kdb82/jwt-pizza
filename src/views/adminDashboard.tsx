@@ -34,6 +34,11 @@ export default function AdminDashboard(props: Props) {
     })();
   }, [props.user, userPage, userFilter]);
 
+  async function deleteUser(user: User) {
+    await pizzaService.deleteUser(user);
+    setUserList(await pizzaService.getUsers(userPage, 10, userFilter));
+  }
+
   function filterUsers() {
     setUserPage(1);
     setUserFilter(`*${filterUserRef.current?.value}*`);
@@ -163,8 +168,8 @@ export default function AdminDashboard(props: Props) {
                             <td className="text-start px-2 whitespace-nowrap text-sm text-gray-800">{user.email}</td>
                             <td className="text-start px-2 whitespace-nowrap text-sm text-gray-800">{user.roles?.map((r) => r.role).join(', ')}</td>
                             <td className="px-6 py-1 whitespace-nowrap text-end text-sm font-medium">
-                              {/* Placeholder until the backend implements DELETE /api/user/:userId */}
-                              <button type="button" aria-label={`Delete ${user.name}`} title="Delete not yet available" disabled className="px-2 py-1 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-1 border-neutral-300 text-neutral-400 cursor-not-allowed">
+                              {/* Admins can't delete their own account from here */}
+                              <button type="button" aria-label={`Delete ${user.name}`} disabled={user.id === props.user?.id} onClick={() => deleteUser(user)} className="px-2 py-1 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-1 border-orange-400 text-orange-400 hover:border-orange-800 hover:text-orange-800 disabled:border-neutral-300 disabled:text-neutral-400 disabled:cursor-not-allowed">
                                 <TrashIcon />
                               </button>
                             </td>

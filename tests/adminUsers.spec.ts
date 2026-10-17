@@ -12,8 +12,10 @@ function makeUsers(prefix: string, count: number) {
   }));
 }
 
-async function mockAdminApi(page: Page) {
+async function mockAdminApi(page: Page, options: { includeSelf?: boolean } = {}) {
   const userRequests: URLSearchParams[] = [];
+  const deletedIds: string[] = [];
+  const firstPage = () => [...(options.includeSelf ? [admin] : []), ...makeUsers('First', 10)].filter((u) => !deletedIds.includes(u.id));
 
   await page.route('*/**/api/auth', async (route) => {
     await route.fulfill({ json: { user: admin, token: 'admin-token' } });
@@ -43,12 +45,21 @@ async function mockAdminApi(page: Page) {
       } else if (page === '2') {
         await route.fulfill({ json: { users: makeUsers('Second', 3), more: false } });
       } else {
-        await route.fulfill({ json: { users: makeUsers('First', 10), more: true } });
+        await route.fulfill({ json: { users: firstPage(), more: true } });
       }
     }
   );
 
-  return { userRequests };
+  await page.route(
+    (url) => url.pathname.startsWith('/api/user/') && url.pathname !== '/api/user/me',
+    async (route) => {
+      expect(route.request().method()).toBe('DELETE');
+      deletedIds.push(decodeURIComponent(route.request().url().split('/api/user/')[1]));
+      await route.fulfill({ json: { message: 'user deleted' } });
+    }
+  );
+
+  return { userRequests, deletedIds };
 }
 
 function lastRequest(requests: URLSearchParams[]) {
@@ -109,10 +120,21 @@ test('admin users list searches by name', async ({ page }) => {
   expect(last.get('limit')).toBe('10');
 });
 
-test('admin users list shows a disabled delete placeholder per user', async ({ page }) => {
-  await mockAdminApi(page);
+test('admin deletes a user from the list', async ({ page }) => {
+  const api = await mockAdminApi(page);
   await openAdminDashboard(page);
 
-  await expect(page.getByRole('button', { name: /^Delete First \d$/ })).toHaveCount(10);
-  await expect(page.getByRole('button', { name: 'Delete First 0' })).toBeDisabled();
+  await page.getByRole('button', { name: 'Delete First 3' }).click();
+
+  await expect(page.getByRole('row', { name: /First 3/ })).toHaveCount(0);
+  await expect(page.getByRole('row', { name: /First 4/ })).toBeVisible();
+  expect(api.deletedIds).toEqual(['First-3']);
+});
+
+test('admin cannot delete their own account from the list', async ({ page }) => {
+  await mockAdminApi(page, { includeSelf: true });
+  await openAdminDashboard(page);
+
+  await expect(page.getByRole('button', { name: 'Delete Admin User' })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Delete First 0' })).toBeEnabled();
 });
