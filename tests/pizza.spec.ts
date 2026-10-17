@@ -215,6 +215,13 @@ async function mockAdminFranchises(page: Page) {
   });
 }
 
+async function mockAdminUsers(page: Page) {
+  await page.route('*/**/api/user?page=1&limit=10&name=*', async (route) => {
+    expect(route.request().method()).toBe('GET');
+    await route.fulfill({ json: { users: [], more: false } });
+  });
+}
+
 async function mockCloseFranchise(page: Page) {
   await page.route('*/**/api/franchise/1', async (route) => {
     expect(route.request().method()).toBe('DELETE');
@@ -356,6 +363,7 @@ test('close store', async ({ page }) => {
 test('admin dashboard', async ({ page }) => {
   await mockAdminLogin(page);
   await mockAdminFranchises(page);
+  await mockAdminUsers(page);
   await page.goto('/');
   await page.getByRole('link', { name: 'Login' }).click();
   await page.getByRole('textbox', { name: 'Email address' }).fill('admin@example.com');
@@ -364,14 +372,16 @@ test('admin dashboard', async ({ page }) => {
   await page.getByRole('link', { name: 'Admin' }).click();
 
   await expect(page.getByRole('heading', { name: "Mama Ricci's kitchen" })).toBeVisible();
-  await expect(page.locator('tbody')).toContainText('Jordan Pizza');
-  await expect(page.locator('tbody')).toContainText('Provo');
-  await expect(page.locator('tbody')).toContainText('1.2 ₿');
+  const franchiseRows = page.locator('tbody').first();
+  await expect(franchiseRows).toContainText('Jordan Pizza');
+  await expect(franchiseRows).toContainText('Provo');
+  await expect(franchiseRows).toContainText('1.2 ₿');
 });
 
 test('close franchise', async ({ page }) => {
   await mockAdminLogin(page);
   await mockAdminFranchises(page);
+  await mockAdminUsers(page);
   await mockCloseFranchise(page);
   await page.goto('/');
   await page.getByRole('link', { name: 'Login' }).click();
