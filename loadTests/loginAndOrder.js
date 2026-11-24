@@ -56,7 +56,7 @@ export function scenario_1() {
     // Login
     response = http.put(
       'https://pizza-service.kdnbradshaw.click/api/auth',
-      '{"email":"kdnbradshaw@gmail.com","password":"admin"}',
+      JSON.stringify({ email: __ENV.PIZZA_EMAIL, password: __ENV.PIZZA_PASSWORD }),
       {
         headers: {
           accept: '*/*',
